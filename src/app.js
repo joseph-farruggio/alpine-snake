@@ -32,7 +32,6 @@ Alpine.store("leaderboard", {
 	},
 
 	init() {
-		console.log(urlParams.has("dev"));
 		if (urlParams.has("dev")) {
 			this.test_getleaderboard();
 		} else {
@@ -40,6 +39,25 @@ Alpine.store("leaderboard", {
 		}
 	},
 });
+
+// import demo from "./demo";
+// Alpine.data('demo', demo)
+
+// Alpine.data('demo', function () {
+// 	return {
+// 		value_a: 'value A',
+// 		someObj: {
+// 			value_b: 'value B',
+// 			someMethod: () => {
+// 				console.log(this.$data.value_a);
+// 				console.log(this.$data.someObj.value_b);
+// 			}
+// 		},
+// 		init() {
+// 			this.someObj.someMethod();
+// 		}
+// 	}	
+// });
 
 window.Alpine = Alpine;
 

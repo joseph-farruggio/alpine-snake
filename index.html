@@ -21,10 +21,10 @@
 
 <body class="bg-[#040817] text-white h-full overflow-hidden" data-color-scheme="dark">
     <div x-data="snake()" class="flex flex-col items-center justify-around gap-4"
-        @keyup.up.window="changeDir('up')"
-        @keyup.down.window="changeDir('down')"
-        @keyup.left.window="changeDir('left')"
-        @keyup.right.window="changeDir('right')">
+        @keyup.up.window="snake.changeDir('up')"
+        @keyup.down.window="snake.changeDir('down')"
+        @keyup.left.window="snake.changeDir('left')"
+        @keyup.right.window="snake.changeDir('right')">
 
         <header class="flex items-center w-[300px] lg:w-[450px] justify-between py-4">
             <button id="openLeaderboard" @click="openLeaderboard()" class="relative z-50">
@@ -55,16 +55,16 @@
         <!-- Game Container -->
         <div class="box overflow-hidden shrink-0 lg:scale-150  h-[300px] w-[300px] mx-auto relative border border-slate-700 lg:mt-20">
             <div id="snake-parts">
-                <template x-for="(snake, index) in snakeParts">
+                <template x-for="(snake, index) in snake.parts">
                     <div class="snake-part block h-[10px] w-[10px] bg-orange-500 rounded-sm absolute" :x-ref="`snake_${index}`" :style="{top: snake.top, left: snake.left}"></div>
                 </template>
             </div>
 
-            <div class="food h-[10px] w-[10px] bg-emerald-400 absolute" x-ref="food" :style="{top: food.top, left: food.left}"></div>
+            <div class="food h-[10px] w-[10px] bg-emerald-400 absolute" x-ref="food" :style="{top: food.position.top, left: food.position.left}"></div>
 
             <div id="game-over" class="game-status z-20 absolute bg-orange-400 text-slate-900 h-full w-full flex-col items-center justify-center flex" x-cloak x-show.important="gameOver">
                 <p class="text-xl font-bold uppercase">You Lose</p>
-                <button id="play-again" class="mt-4 border border-slate-900 rounded-md text-slate-900 px-4 py-2" @click="reset">Play Again</button>
+                <button id="play-again" class="mt-4 border border-slate-900 rounded-md text-slate-900 hover:bg-slate-900 hover:text-white px-4 py-2" @click="reset">Play Again</button>
             </div>
         </div>
 
@@ -72,15 +72,15 @@
         <div class="game-speed hidden w-[450px] mx-auto lg:block lg:mt-20">
             <label>Game Speed:</label>
             <div class="speeds flex items-center mt-2 gap-4">
-                <button :class="speed == 300 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="speed = 300, runGame()">Slow</button>
-                <button :class="speed == 100 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="speed = 100, runGame()">Fast</button>
-                <button :class="speed == 50 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="speed = 50, runGame()">Crazy</button>
+                <button :class="snake.speed == 300 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="snake.speed = 300, runGame()">Slow</button>
+                <button :class="snake.speed == 100 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="snake.speed = 100, runGame()">Fast</button>
+                <button :class="snake.speed == 50 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="snake.speed = 50, runGame()">Crazy</button>
             </div>
         </div>
 
         <!-- Mobile Controls -->
         <div class="w-[300px]  mx-auto flex flex-col items-center justify-center gap-4 lg:hidden">
-            <button @click="changeDir('up')" class="border border-slate-400 text-white px-8 py-8 rounded-md">
+            <button @click="snake.changeDir('up')" class="border border-slate-400 text-white px-8 py-8 rounded-md">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
                         clip-rule="evenodd" />
@@ -88,21 +88,21 @@
             </button>
 
             <div class="flex items-center justify-center gap-4">
-                <button @click="changeDir('left')" class="border border-slate-400 text-white px-8 py-8 rounded-md">
+                <button @click="snake.changeDir('left')" class="border border-slate-400 text-white px-8 py-8 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
                             clip-rule="evenodd" />
                     </svg>
                 </button>
 
-                <button @click="changeDir('down')" class="border border-slate-400 text-white px-8 py-8 rounded-md">
+                <button @click="snake.changeDir('down')" class="border border-slate-400 text-white px-8 py-8 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z"
                             clip-rule="evenodd" />
                     </svg>
                 </button>
 
-                <button @click="changeDir('right')" class="border border-slate-400 text-white px-8 py-8 rounded-md">
+                <button @click="snake.changeDir('right')" class="border border-slate-400 text-white px-8 py-8 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
                             clip-rule="evenodd" />
@@ -131,21 +131,21 @@
 
                 <div class="w-full">
                     <label class="mt-10 w-full">Username
-                        <input id="settings-username" type="text" @input.debounce="validateUsername(), usernameTouched = true" class="text-white mt-1 px-4 py-3 rounded-md w-full" x-model="username"
+                        <input id="settings-username" type="text" @input.debounce="form.validateName(); form.nameTouched = true" class="text-white mt-1 px-4 py-3 rounded-md w-full" x-model="player.name"
                             placeholder="Username">
                     </label>
 
                     <p class="text-slate-400 mt-1">(include an <i>@</i> to link to your Twitter/Instagram)</p>
 
-                    <div id="settings-social-picker" class="flex items-center gap-2 mt-5" x-show="hasSocial()">
-                        <button id="settings-twitter" @click="social = 'twitter'" :class="social == 'twitter' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-6 py-3 rounded-md">
+                    <div id="settings-social-picker" class="flex items-center gap-2 mt-5" x-show="player.hasSocial()">
+                        <button id="settings-twitter" @click="player.social = 'twitter'" :class="player.social == 'twitter' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-6 py-3 rounded-md">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
                                 <path
                                     d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
                             </svg>
                         </button>
 
-                        <button<button id="settings-instagram" @click="social = 'instagram'" :class="social == 'instagram' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-6 py-3 rounded-md">
+                        <button id="settings-instagram" @click="player.social = 'instagram'" :class="player.social == 'instagram' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-6 py-3 rounded-md">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
                                 <path
                                     d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
@@ -153,15 +153,15 @@
                             </button>
                     </div>
 
-                    <p id="settings-username-error" class="text-red-400 mt-1" x-text="errors.username" x-show="errors.username && usernameTouched"></p>
+                    <p id="settings-username-error" class="text-red-400 mt-1" x-text="form.errors.name" x-show="form.errors.name && form.nameTouched"></p>
                 </div>
 
                 <div>
                     <label class="mt-20 block">Game Speed:</label>
                     <div class="speeds flex items-center mt-4 gap-4">
-                        <button :class="speed == 300 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="speed = 300, runGame()">Slow</button>
-                        <button :class="speed == 100 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="speed = 100, runGame()">Fast</button>
-                        <button :class="speed == 50 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="speed = 50, runGame()">Crazy</button>
+                        <button :class="snake.speed == 300 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="snake.speed = 300, runGame()">Slow</button>
+                        <button :class="snake.speed == 100 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="snake.speed = 100, runGame()">Fast</button>
+                        <button :class="snake.speed == 50 && 'bg-slate-700 text-emerald-400'" class="px-4 py-2 rounded-md" @click="snake.speed = 50, runGame()">Crazy</button>
                     </div>
                 </div>
             </div>
@@ -175,7 +175,7 @@
                 <div class="max-h-[60vh] w-full overflow-scroll relative pb-32">
                     <template x-for="entry in $store.leaderboard.entries">
                         <div class="leaderboard-entry w-full flex items-center justify-between border-b border-slate-700 py-4 last:border-none pr-4">
-                            <p class="text-lg line-clamp-1" x-html="getUsername(entry.username, entry.social)"></p>
+                            <p class="text-lg line-clamp-1" x-html="getPlayerName(entry.username, entry.social)"></p>
                             <p class="text-xl font-bold" x-text="entry.points"></p>
                         </div>
                     </template>
@@ -185,23 +185,23 @@
         </div>
 
         <!-- Username Prompt -->
-        <div id="username-prompt" x-show="usernamePrompt" x-cloak class="fixed top-0 left-0 z-30 bg-[#040817] text-white h-screen w-screen p-4">
+        <div id="username-prompt" x-show="playerNamePrompt" x-cloak class="fixed top-0 left-0 z-30 bg-[#040817] text-white h-screen w-screen p-4">
             <div class="h-full flex flex-col items-center justify-center w-[300px] mx-auto text-center">
                 <h2 class="text-xl text-center">You made it on the leaderboard!</h2>
 
                 <p class="text-slate-400 mt-1">(include an <i>@</i> to link to your Twitter/Instagram)</p>
 
-                <input type="text" @input.debounce="validateUsername(), usernameTouched = true" class="mt-10 text-white px-4 py-3 rounded-md w-full max-w-sm" x-model="username" placeholder="Username">
+                <input type="text" @input.debounce="form.nameTouched = true; form.validateName()" class="mt-10 text-white px-4 py-3 rounded-md w-full max-w-sm" x-model="player.name" placeholder="Username">
 
-                <div class="flex items-center gap-2 mt-4" x-show="hasSocial()">
-                    <button @click="social = 'twitter'" :class="social == 'twitter' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-6 py-3 rounded-md">
+                <div class="flex items-center gap-2 mt-4" x-show="player.hasSocial()">
+                    <button @click="player.social = 'twitter'" :class="player.social == 'twitter' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-6 py-3 rounded-md">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
                             <path
                                 d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
                         </svg>
                     </button>
 
-                    <button @click="social = 'instagram'" :class="social == 'instagram' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-6 py-3 rounded-md">
+                    <button @click="player.social = 'instagram'" :class="player.social == 'instagram' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-6 py-3 rounded-md">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
                             <path
                                 d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
@@ -209,9 +209,9 @@
                     </button>
                 </div>
 
-                <p class="text-red-400 mt-1" x-text="errors.username" x-show="errors.username && usernameTouched"></p>
+                <p class="text-red-400 mt-1" x-text="form.errors.name" x-show="form.errors.name && form.nameTouched"></p>
 
-                <button @click="saveScore()" :disabled="!validateUsername()" :class="!validateUsername() ? 'bg-slate-800 text-slate-700 cursor-not-allowed' : 'bg-slate-700 text-emerald-400'"
+                <button @click="saveScore()" :disabled="!form.validateName()" :class="!form.validateName() ? 'bg-slate-800 text-slate-700 cursor-not-allowed' : 'bg-slate-700 text-emerald-400'"
                     class="mt-20 px-6 py-3 rounded-md">Submit</button>
             </div>
         </div>

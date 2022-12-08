@@ -1,301 +1,306 @@
-export default () => ({
-	/**
-	 * Set the game defaults
-	 */
-	points: 0,
-	highScore: Alpine.$persist(0),
-	gameOver: false,
-	settingsOpen: false,
-	leaderboardOpen: false,
-	usernamePrompt: false,
-	leaderboardNote: false,
-	username: Alpine.$persist(null),
-	errors: {
-		username: "",
-	},
-	social: Alpine.$persist("twitter"),
-	snakeParts: [
-		{
-			top: "200px",
-			left: "200px",
-			prevTop: null,
-			prevLeft: null,
-		},
-	],
-	food: {
-		top: null,
-		left: null,
-	},
-	currentDir: "up",
-	speed: Alpine.$persist(300),
-	// End game defaults
+import { roundToNearestTen, getRandomNumber } from "./utilities";
 
-	/**
-	 * Methods to move the snake
-	 */
-	changeDir(dir) {
-		if (dir == "up" && this.currentDir != "down") {
-			this.currentDir = dir;
-			return;
-		}
+export default function() {
+	return {
+		snake: {
+			currentDir: "up",
+			speed: Alpine.$persist(300),
+			parts: [
+				{
+					top: "200px",
+					left: "200px",
+					prevTop: null,
+					prevLeft: null,
+				},
+			],
 
-		if (dir == "down" && this.currentDir != "up") {
-			this.currentDir = dir;
-			return;
-		}
-
-		if (dir == "left" && this.currentDir != "right") {
-			this.currentDir = dir;
-			return;
-		}
-
-		if (dir == "right" && this.currentDir != "left") {
-			this.currentDir = dir;
-			return;
-		}
-	},
-
-	snakeMove() {
-		if (this.gameOver) {
-			return;
-		}
-		this.snakeParts.forEach((snake, index) => {
-			// Save the current position
-			snake.prevTop = snake.top;
-			snake.prevLeft = snake.left;
-
-			if (index == 0) {
-				// Move the first snake part
-				if (this.currentDir == "up") {
-					snake.top = `${parseInt(snake.top) - 10}px`;
-				}
-
-				if (this.currentDir == "down") {
-					snake.top = `${parseInt(snake.top) + 10}px`;
-				}
-
-				if (this.currentDir == "left") {
-					snake.left = `${parseInt(snake.left) - 10}px`;
-				}
-
-				if (this.currentDir == "right") {
-					snake.left = `${parseInt(snake.left) + 10}px`;
-				}
-			} else {
-				/**
-				 * Every other snake part takes the
-				 * previous position of the part before it
-				 */
-				snake.top = this.snakeParts[index - 1].prevTop;
-				snake.left = this.snakeParts[index - 1].prevLeft;
-			}
-		});
-	},
-	// End snake move methods
-
-	/**
-	 * Helper Methods
-	 */
-	roundToNearestTen(num) {
-		return Math.ceil(num / 10) * 10;
-	},
-	getRandomNumber() {
-		return Math.floor(Math.random() * (280 - 20 + 1) + 20);
-	},
-	// End helper methods
-
-	/**
-	 * Methods to check if the snake has hit itself or the wall
-	 */
-	boxLeft() {
-		if (parseInt(this.snakeParts[0].top) == 0 || parseInt(this.snakeParts[0].top) == 300 || parseInt(this.snakeParts[0].left) == 0 || parseInt(this.snakeParts[0].left) == 300) {
-			this.setGameOver();
-		}
-	},
-	touchedTail() {
-		this.snakeParts.forEach((snake, index) => {
-			if (index != 0) {
-				if (parseInt(this.snakeParts[0].top) == parseInt(snake.top) && parseInt(this.snakeParts[0].left) == parseInt(snake.left)) {
-					this.setGameOver();
-				}
-			}
-		});
-	},
-	setGameOver() {
-		this.clearInterval();
-
-		if (this.points > 20 && this.points > this.highScore) {
-			if (!this.validateUsername()) {
-				this.usernamePrompt = true;
-			} else {
-				this.saveScore();
-				this.runGame();
-			}
-		} else {
-			this.gameOver = true;
-		}
-	},
-	// End game over methods
-
-	/**
-	 * Methods for the snake's food
-	 */
-	foodEaten() {
-		if (this.snakeParts[0].top == this.food.top && this.snakeParts[0].left == this.food.left) {
-			this.points++;
-			this.randomizeFood();
-			this.growSnake();
-
-			// Set the highscore
-			this.highScore = this.points > this.highScore ? this.points : this.highScore;
-		}
-	},
-	eatFood() {
-		this.points++;
-	},
-	randomizeFood() {
-		this.food.top = `${this.roundToNearestTen(this.getRandomNumber())}px`;
-		this.food.left = `${this.roundToNearestTen(this.getRandomNumber())}px`;
-	},
-	growSnake() {
-		let lastSnakePart = this.snakeParts[this.snakeParts.length - 1];
-		this.snakeParts.push({
-			top: lastSnakePart.top,
-			left: lastSnakePart.left,
-		});
-	},
-	// End food methods
-
-	// Reset the game
-	reset() {
-		this.gameOver = false;
-		this.leaderboardNote = false;
-		this.usernamePrompt = false;
-		this.points = 0;
-		this.snakeParts = [
-			{
-				top: "100px",
-				left: "100px",
-				prevTop: null,
-				prevLeft: null,
+			firstPart() {
+				return this.parts[0];
 			},
-		];
-		this.runGame();
-	},
-	runMethods() {
-		this.touchedTail();
-		this.boxLeft();
-		this.foodEaten();
-		this.snakeMove();
-	},
 
-	/**
-	 * Interval methods
-	 */
-	intervalID: null,
-	setInterval() {
-		// Run methods on an interval
-		let myInterval = setInterval(() => this.runMethods(), this.speed);
-		this.intervalID = myInterval;
-	},
-	clearInterval() {
-		window.clearInterval(this.intervalID);
-	},
-	runGame() {
-		if (this.intervalID) {
-			clearInterval(this.intervalID);
-		}
-		this.setInterval();
-	},
-	// End interval methods
+			lastPart() {
+				return this.parts[this.parts.length - 1];
+			},
+			
+			changeDir(dir) {
+				if (dir == "up" && this.currentDir != "down") {
+					this.currentDir = dir;
+					return;
+				}
 
-	/**
-	 * Open Settings menu / Leaderboard
-	 */
-	openSettings() {
-		this.leaderboardOpen = false;
+				if (dir == "down" && this.currentDir != "up") {
+					this.currentDir = dir;
+					return;
+				}
 
-		if (!this.settingsOpen) {
+				if (dir == "left" && this.currentDir != "right") {
+					this.currentDir = dir;
+					return;
+				}
+
+				if (dir == "right" && this.currentDir != "left") {
+					this.currentDir = dir;
+					return;
+				}
+			},
+
+			move() {
+				// if (this.$data.gameOver) {
+				// 	return;
+				// }
+				this.parts.forEach((snake, index) => {
+					// Save the current position
+					snake.prevTop = snake.top;
+					snake.prevLeft = snake.left;
+
+					if (index == 0) {
+						// Move the first snake part
+						if (this.currentDir == "up") {
+							snake.top = `${parseInt(snake.top) - 10}px`;
+						}
+
+						if (this.currentDir == "down") {
+							snake.top = `${parseInt(snake.top) + 10}px`;
+						}
+
+						if (this.currentDir == "left") {
+							snake.left = `${parseInt(snake.left) - 10}px`;
+						}
+
+						if (this.currentDir == "right") {
+							snake.left = `${parseInt(snake.left) + 10}px`;
+						}
+					} else {
+						/**
+						 * Every other snake part takes the
+						 * previous position of the part before it
+						 */
+						snake.top = this.parts[index - 1].prevTop;
+						snake.left = this.parts[index - 1].prevLeft;
+					}
+				});
+			},
+
+			ateFood: () => {
+				if (this.$data.snake.firstPart().top == this.$data.food.position.top && this.$data.snake.firstPart().left == this.$data.food.position.left) {
+					this.$data.points++;
+					this.$data.food.randomize();
+					this.$data.snake.grow();
+
+					// Set the highscore
+					this.$data.highScore = this.$data.points > this.$data.highScore ? this.$data.points : this.$data.highScore;
+				}
+			},
+
+			grow() {
+				this.parts.push({
+					top: this.lastPart().top,
+					left: this.lastPart().left,
+				});
+			},
+
+			leftBox: () => {
+				if (parseInt(this.$data.snake.firstPart().top) == 0 || parseInt(this.$data.snake.firstPart().top) == 300 || parseInt(this.$data.snake.firstPart().left) == 0 || parseInt(this.$data.snake.firstPart().left) == 300) {
+					this.$data.setGameOver();
+				}
+			},
+
+			touchedTail: () => {
+				this.$data.snake.parts.forEach((snake, index) => {
+					if (index != 0) {
+						if (parseInt(this.$data.snake.firstPart().top) == parseInt(snake.top) && parseInt(this.$data.snake.firstPart().left) == parseInt(snake.left)) {
+							this.$data.setGameOver();
+						}
+					}
+				});
+			},
+		},
+
+		food: {
+			position: {
+				top: null,
+				left: null,
+			},
+			eat() {
+				this.$data.points++;
+			},
+
+			randomize() {
+				this.position.top = `${roundToNearestTen(getRandomNumber())}px`;
+				this.position.left = `${roundToNearestTen(getRandomNumber())}px`;
+			},
+		},
+
+		player: {
+			name: Alpine.$persist(null),
+			social: Alpine.$persist("twitter"),
+
+			hasSocial: () => {
+				return this.$data.form.validateName() && this.$data.player.name.startsWith("@");
+			},
+		},
+
+		
+
+		form: {
+			nameTouched: false,
+			errors: {
+				name: "",
+			},
+			validateName: () =>  {
+				let name = this.$data.player.name;
+				
+				if (name != null) {
+					name = name.trim();
+				}
+				
+				if (!!name && name != "@") {
+					this.$data.form.errors.name = false;
+					return true;
+				}
+
+				this.$data.form.errors.name = "Please enter a name";
+				return false;
+			},	
+		},
+
+		/**
+		 * Set the game defaults
+		 */
+		points: 0,
+		highScore: Alpine.$persist(0),
+		gameOver: false,
+		settingsOpen: false,
+		leaderboardOpen: false,
+		playerNamePrompt: false,
+		leaderboardNote: false,
+		
+
+		setGameOver() {
 			this.clearInterval();
-			this.settingsOpen = true;
-		} else {
-			this.runGame();
-			this.settingsOpen = false;
-		}
-	},
-	openLeaderboard() {
-		this.settingsOpen = false;
 
-		if (!this.leaderboardOpen) {
-			this.clearInterval();
-			this.leaderboardOpen = true;
-		} else {
+			if (this.points > 20 && this.points > this.highScore) {
+				if (!this.form.validateName()) {
+					this.playerNamePrompt = true;
+				} else {
+					this.saveScore();
+					this.runGame();
+				}
+			} else {
+				this.gameOver = true;
+			}
+		},
+		reset() {
+			this.gameOver = false;
+			this.leaderboardNote = false;
+			this.playerNamePrompt = false;
+			this.points = 0;
+			this.snake.parts = [
+				{
+					top: "100px",
+					left: "100px",
+					prevTop: null,
+					prevLeft: null,
+				},
+			];
 			this.runGame();
+		},
+
+		
+
+		/**
+		 * Interval methods
+		 */
+		intervalID: null,
+		setInterval() {
+			// Run methods on an interval
+			let myInterval = setInterval(() => this.runMethods(), this.snake.speed);
+			this.intervalID = myInterval;
+		},
+		clearInterval() {
+			window.clearInterval(this.intervalID);
+		},
+		runGame() {
+			if (this.intervalID) {
+				clearInterval(this.intervalID);
+			}
+			this.setInterval();
+		},
+
+		runMethods() {
+			this.snake.touchedTail();
+			this.snake.leftBox();
+			this.snake.ateFood();
+			this.snake.move();
+		},
+		// End interval methods
+
+		/**
+		 * Open Settings menu / Leaderboard
+		 */
+		openSettings() {
 			this.leaderboardOpen = false;
-		}
-	},
-	// End open settings menu / leaderboard
 
-	/**
-	 * Username Methods
-	 */
-	getUsername(username, social) {
-		if (username.startsWith("@")) {
-			let domain = social == "twitter" ? "https://twitter.com" : "https://instagram.com";
-			return `<a href="${domain}/${username.substring(1)}" target="_blank" class="underline">${username}</a>`;
-		} else {
-			return username;
-		}
-	},
+			if (!this.settingsOpen) {
+				this.clearInterval();
+				this.settingsOpen = true;
+			} else {
+				this.runGame();
+				this.settingsOpen = false;
+			}
+		},
 
-	usernameTouched: false,
-	validateUsername() {
-		if (this.username != null && this.username.trim() != "" && this.username != "@" && this.username.length > 0) {
-			this.errors.username = false;
-			return true;
-		}
+		openLeaderboard() {
+			this.settingsOpen = false;
 
-		this.errors.username = "Please enter a username";
-		return false;
-	},
+			if (!this.leaderboardOpen) {
+				this.clearInterval();
+				this.leaderboardOpen = true;
+			} else {
+				this.runGame();
+				this.leaderboardOpen = false;
+			}
+		},
 
-	hasSocial() {
-		return this.username && this.username.startsWith("@");
-	},
-	// End username methods
+		saveScore() {
+			// Minimum score of 20 points
+			if (this.points > 20) {
+				Alpine.store("leaderboard").saveScore(this.name, this.points, this.social);
+				this.playerNamePrompt = false;
+				this.leaderboardNote = true;
+			}
+		},
 
-	/**
-	 * Save score to the database
-	 */
-	saveScore() {
-		// Minimum score of 20 points
-		if (this.points > 20) {
-			Alpine.store("leaderboard").saveScore(this.username, this.points, this.social);
-			this.usernamePrompt = false;
-			this.leaderboardNote = true;
-		}
-	},
+		getPlayerName(name, social) {
+			if (name.startsWith("@")) {
+				let domain = social == "twitter" ? "https://twitter.com" : "https://instagram.com";
+				return `<a href="${domain}/${name.substring(1)}" target="_blank" class="underline">${name}</a>`;
+			} else {
+				return name;
+			}
+		},
 
-	/**
-	 * Methods for Cypress Testing
-	 */
-	test_moveToFood() {
-		this.snakeParts[0].top = this.food.top;
-		this.snakeParts[0].left = this.food.left;
-	},
-	test_moveToWall() {
-		this.snakeParts[0].top = "0px";
-		this.snakeParts[0].left = "0px";
-	},
-	test_touchTail() {
-		this.growSnake();
-		this.snakeParts[0].top = this.snakeParts[1].top;
-		this.snakeParts[0].left = this.snakeParts[1].left;
-	},
+		/**
+		 * Methods for Cypress Testing
+		 */
+		test_moveToFood() {
+			this.snake.firstPart().top = this.food.position.top;
+			this.snake.firstPart().left = this.food.position.left;
+		},
+		test_moveToWall() {
+			this.snake.firstPart().top = "0px";
+			this.snake.firstPart().left = "0px";
+		},
+		test_touchTail() {
+			this.snake.grow();
+			this.snake.firstPart().top = this.snake.parts[1].top;
+			this.snake.firstPart().left = this.snake.parts[1].left;
+		},
 
-	// Initialize the game
-	init() {
-		this.randomizeFood();
-		this.runGame();
-	},
-});
+		// Initialize the game
+		init() {
+			this.food.randomize();
+			this.runGame();
+		},
+	}
+};

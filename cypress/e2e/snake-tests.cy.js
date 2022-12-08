@@ -1,7 +1,7 @@
 // -- Start: Our Cypress Tests --
 describe("When snake eats food", () => {
 	beforeEach(() => {
-		cy.visit("http://localhost:8000?dev");
+		cy.visit("http://127.0.0.1:8080?dev");
 	});
 
 	it("Point increments by one", () => {
@@ -31,7 +31,7 @@ describe("When snake eats food", () => {
 
 describe("When snake hits wall", () => {
 	beforeEach(() => {
-		cy.visit("http://localhost:8000?dev");
+		cy.visit("http://127.0.0.1:8080?dev");
 	});
 
 	it("Game over prompt visible", () => {
@@ -45,7 +45,7 @@ describe("When snake hits wall", () => {
 
 describe("When snake hits itself", () => {
 	beforeEach(() => {
-		cy.visit("http://localhost:8000?dev");
+		cy.visit("http://127.0.0.1:8080?dev");
 	});
 
 	it("Game over prompt visible", () => {
@@ -59,7 +59,7 @@ describe("When snake hits itself", () => {
 
 describe("When new game starts", () => {
 	beforeEach(() => {
-		cy.visit("http://localhost:8000?dev");
+		cy.visit("http://127.0.0.1:8080?dev");
 	});
 
 	it("Points reset", () => {
@@ -77,7 +77,7 @@ describe("When new game starts", () => {
 
 describe("Validating username", () => {
 	beforeEach(() => {
-		cy.visit("http://localhost:8000?dev");
+		cy.visit("http://127.0.0.1:8080?dev");
 	});
 
 	it("Valid username given", () => {
@@ -135,7 +135,7 @@ describe("Validating username", () => {
 			cy.get("#settings-twitter")
 				.click()
 				.should(() => {
-					expect(app.social).to.equal("twitter");
+					expect(app.player.social).to.equal("twitter");
 				});
 		});
 	});
@@ -148,41 +148,32 @@ describe("Validating username", () => {
 			cy.get("#settings-instagram")
 				.click()
 				.should(() => {
-					expect(app.social).to.equal("instagram");
+					expect(app.player.social).to.equal("instagram");
 				});
 		});
 	});
 });
 
 // To Do: Hit dev leaderboard during tests
-
 describe("Leaderboard", () => {
 	beforeEach(() => {
-		cy.visit("http://localhost:8000?dev");
+		cy.visit("http://127.0.0.1:8080?dev");
 	});
 
-	// it("Can retrieve leaderboard", () => {
-	// 	cy.window().then((win) => {
-	// 		// Set a random username
-	// 		let username = (Math.random() + 1).toString(36).substring(7);
-
-	// 		// Save to dev leaderboard
-	// 		win.Alpine.store("leaderboard").test_getleaderboard();
-
-	// 	});
-	// });
+	it("Can retrieve leaderboard", () => {
+		cy.get("#openLeaderboard").click();
+		cy.get(".leaderboard-entry").should("be.visible");
+	});
 
 	it("Can save to leaderboard", () => {
 		cy.window().then((win) => {
 			// Set a random username
 			let username = (Math.random() + 1).toString(36).substring(7);
+
 			// Save to dev leaderboard
 			win.Alpine.store("leaderboard").test_saveScore(username, 50, "twitter");
-
-			cy.visit("http://localhost:8000?dev");
-
-			cy.get("#openLeaderboard").click();
-
+			cy.wait(1000);
+			cy.visit("http://127.0.0.1:8080?dev");
 			// Check if username is set
 			cy.contains(".leaderboard-entry", username);
 		});
