@@ -10,7 +10,8 @@
         "build:js": "esbuild src/app.js --bundle --outfile=dist/app.js",
         "build:css": "npx tailwindcss -i ./src/styles.css -o ./dist/styles.css --minify",
         "build": "npm run build:js && npm run build:css",
-        "serve": "php -S localhost:8000"
+        "serve": "npx http-server",
+        "test": "npx cypress open"
     },
     "author": "",
     "license": "ISC",
@@ -30,6 +31,9 @@
         "tailwindcss": "^3.1.6"
     },
     "dependencies": {
-        "firebase": "^8.10.0"
+        "cypress": "^10.4.0",
+        "firebase": "^8.10.1",
+        "firebaseui": "^6.0.1",
+        "http-server": "^14.1.1"
     }
 }
